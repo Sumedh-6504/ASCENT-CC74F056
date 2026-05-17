@@ -43,8 +43,8 @@ export default function ContractUpload({ onAnalyze, isAnalyzing, analysisStep }:
       } else {
         setError("Could not extract text from this file.");
       }
-    } catch (err: any) {
-      setError(err.message || "Error reading file.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error reading file.");
     } finally {
       setIsParsing(false);
     }

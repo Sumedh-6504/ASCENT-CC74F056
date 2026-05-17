@@ -15,6 +15,7 @@ export default function Results() {
   useEffect(() => {
     const data = sessionStorage.getItem("lexguard_results");
     if (data) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setAnalysis(JSON.parse(data));
     } else {
       router.push("/");

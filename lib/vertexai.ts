@@ -1,24 +1,16 @@
-import { VertexAI } from "@google-cloud/vertexai";
+import { GoogleGenAI } from "@google/genai";
 
-// Initialize Vertex AI with project and location
-// This requires GOOGLE_CLOUD_PROJECT and GOOGLE_APPLICATION_CREDENTIALS to be set
-const projectId = process.env.GOOGLE_CLOUD_PROJECT;
-if (!projectId) {
-  throw new Error("GOOGLE_CLOUD_PROJECT environment variable is not set.");
+const apiKey = process.env.GEMINI_API_KEY;
+
+if (!apiKey) {
+  console.warn("GEMINI_API_KEY environment variable is not set. Please set it in .env.local");
 }
 
-const location = "us-central1";
+export const ai = new GoogleGenAI({ apiKey });
 
-const vertexAi = new VertexAI({
-  project: projectId,
-  location: location,
-});
-
-export const geminiModel = vertexAi.getGenerativeModel({
-  model: "gemini-1.5-flash",
-  generationConfig: {
-    maxOutputTokens: 8192,
-    temperature: 0.1,
-    responseMimeType: "application/json",
-  },
-});
+export const MODEL_NAME = "gemini-1.5-flash";
+export const GENERATION_CONFIG = {
+  maxOutputTokens: 8192,
+  temperature: 0.1,
+  responseMimeType: "application/json",
+};

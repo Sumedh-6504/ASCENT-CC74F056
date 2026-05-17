@@ -1,7 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Increase body size limit for PDF/DOCX uploads (default is 4MB)
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "20mb",
+    },
+  },
 };
 
 export default nextConfig;

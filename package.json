@@ -3,17 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
-    "@google-cloud/vertexai": "^1.12.0",
-    "google-auth-library": "^10.6.2",
     "lucide-react": "^1.16.0",
     "next": "16.2.6",
-    "pdf-parse": "^2.4.5",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-dropzone": "^15.0.0"

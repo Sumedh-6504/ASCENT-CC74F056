@@ -1,34 +1,25 @@
 import { NextResponse } from "next/server";
-import pdfParse from "pdf-parse";
+
+const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:8000";
+
+export const maxDuration = 30;
 
 export async function POST(request: Request) {
   try {
     const formData = await request.formData();
-    const file = formData.get("file") as File | null;
 
-    if (!file) {
-      return NextResponse.json({ error: "No file provided" }, { status: 400 });
-    }
+    const res = await fetch(`${BACKEND_URL}/parse`, {
+      method: "POST",
+      body: formData,
+      // Do NOT set Content-Type — fetch sets it automatically with the correct boundary
+    });
 
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    
-    let text = "";
-
-    if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
-      const data = await pdfParse(buffer);
-      text = data.text;
-    } else {
-      // Fallback for TXT, MD, CSV, or unknown formats
-      text = buffer.toString("utf-8");
-    }
-
-    return NextResponse.json({ text });
-  } catch (error: any) {
-    console.error("Parse error:", error);
+    const data = await res.json();
+    return NextResponse.json(data, { status: res.status });
+  } catch {
     return NextResponse.json(
-      { error: "Failed to parse file: " + error.message },
-      { status: 500 }
+      { error: "Failed to connect to the parsing service. Is the backend running?" },
+      { status: 503 }
     );
   }
 }

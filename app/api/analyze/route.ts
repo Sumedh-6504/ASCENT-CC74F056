@@ -1,30 +1,29 @@
 import { NextResponse } from "next/server";
-import { detective } from "../../../lib/agents/detective";
-import { judge } from "../../../lib/agents/judge";
+
+const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:8000";
+
+// Increase timeout for long Gemini calls (two-agent pipeline)
+export const maxDuration = 120;
 
 export async function POST(request: Request) {
   try {
-    const { contractText } = await request.json();
+    const body = await request.json();
 
-    if (!contractText || typeof contractText !== "string") {
-      return NextResponse.json(
-        { error: "Invalid or missing contractText" },
-        { status: 400 }
-      );
-    }
+    const res = await fetch(`${BACKEND_URL}/analyze`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        // Accept both camelCase (frontend) and snake_case
+        contract_text: body.contractText ?? body.contract_text ?? "",
+      }),
+    });
 
-    // Agent 1: Detective
-    const detectiveFindings = await detective(contractText);
-
-    // Agent 2: Judge
-    const analysis = await judge(contractText, detectiveFindings);
-
-    return NextResponse.json(analysis);
-  } catch (error: any) {
-    console.error("Analysis pipeline error:", error);
+    const data = await res.json();
+    return NextResponse.json(data, { status: res.status });
+  } catch {
     return NextResponse.json(
-      { error: error.message || "Failed to analyze contract" },
-      { status: 500 }
+      { error: "Failed to connect to the analysis service. Is the backend running?" },
+      { status: 503 }
     );
   }
 }

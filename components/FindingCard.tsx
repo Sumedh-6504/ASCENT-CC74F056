@@ -58,14 +58,14 @@ export default function FindingCard({ finding }: FindingCardProps) {
           {isExpanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
         </div>
         <div className={`mt-2 font-mono text-sm text-slate-700 ${isExpanded ? "" : "line-clamp-2"}`}>
-          "{finding.clause_text}"
+          &quot;{finding.clause_text}&quot;
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
           <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Detective Finding</h4>
-          <p className="text-sm text-slate-600 italic">"{finding.detective_finding}"</p>
+          <p className="text-sm text-slate-600 italic">&quot;{finding.detective_finding}&quot;</p>
         </div>
         <div>
           <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Judge Verdict</h4>
