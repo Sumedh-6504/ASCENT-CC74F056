@@ -7,28 +7,67 @@ interface SummaryStatsProps {
   stats: Stats;
 }
 
+const METRICS = [
+  { key: "total_findings", label: "TOTAL",    color: "#00d4ff" },
+  { key: "critical_count", label: "CRITICAL", color: "#ff2d55" },
+  { key: "high_count",     label: "HIGH",     color: "#ff6b35" },
+  { key: "medium_count",   label: "MEDIUM",   color: "#ffd60a" },
+  { key: "low_count",      label: "LOW",      color: "#30d158" },
+] as const;
+
 export default function SummaryStats({ stats }: SummaryStatsProps) {
   return (
-    <div className="flex flex-wrap gap-3 justify-center">
-      <div className="px-4 py-2 bg-slate-100 rounded-lg flex flex-col items-center min-w-[100px]">
-        <span className="text-2xl font-black text-slate-700">{stats.total_findings}</span>
-        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total</span>
-      </div>
-      <div className="px-4 py-2 bg-rose-50 border border-rose-100 rounded-lg flex flex-col items-center min-w-[100px]">
-        <span className="text-2xl font-black text-rose-600">{stats.critical_count}</span>
-        <span className="text-xs font-bold text-rose-500 uppercase tracking-wider">Critical</span>
-      </div>
-      <div className="px-4 py-2 bg-orange-50 border border-orange-100 rounded-lg flex flex-col items-center min-w-[100px]">
-        <span className="text-2xl font-black text-orange-600">{stats.high_count}</span>
-        <span className="text-xs font-bold text-orange-500 uppercase tracking-wider">High</span>
-      </div>
-      <div className="px-4 py-2 bg-amber-50 border border-amber-100 rounded-lg flex flex-col items-center min-w-[100px]">
-        <span className="text-2xl font-black text-amber-600">{stats.medium_count}</span>
-        <span className="text-xs font-bold text-amber-500 uppercase tracking-wider">Medium</span>
-      </div>
-      <div className="px-4 py-2 bg-blue-50 border border-blue-100 rounded-lg flex flex-col items-center min-w-[100px]">
-        <span className="text-2xl font-black text-blue-600">{stats.low_count}</span>
-        <span className="text-xs font-bold text-blue-500 uppercase tracking-wider">Low</span>
+    <div className="space-y-3 print-card">
+      <p
+        className="text-center text-[10px] tracking-[0.35em] uppercase"
+        style={{ color: "#2a4565", fontFamily: "var(--font-mono, monospace)" }}
+      >
+        ── Threat Assessment ──
+      </p>
+
+      <div className="grid grid-cols-5 gap-2">
+        {METRICS.map(({ key, label, color }) => {
+          const count = stats[key];
+          const isActive = count > 0;
+          return (
+            <div
+              key={key}
+              className="relative rounded-xl p-3 text-center transition-all duration-300 hover:scale-105 cursor-default"
+              style={{
+                background: isActive ? `${color}12` : "rgba(10,20,40,0.5)",
+                border:     `1px solid ${isActive ? `${color}40` : "rgba(30,50,80,0.5)"}`,
+                boxShadow:  isActive ? `0 0 18px ${color}22` : "none",
+              }}
+            >
+              {/* Top accent line */}
+              <div
+                className="absolute top-0 left-1/4 right-1/4 h-[1px] rounded-full"
+                style={{ background: color, opacity: isActive ? 0.7 : 0.2 }}
+              />
+
+              <span
+                className="text-2xl font-black block"
+                style={{
+                  color,
+                  opacity: isActive ? 1 : 0.3,
+                  fontFamily: "var(--font-mono, monospace)",
+                }}
+              >
+                {count}
+              </span>
+              <span
+                className="text-[9px] tracking-[0.22em] block mt-0.5"
+                style={{
+                  color,
+                  opacity: isActive ? 0.6 : 0.25,
+                  fontFamily: "var(--font-mono, monospace)",
+                }}
+              >
+                {label}
+              </span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

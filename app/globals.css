@@ -1,26 +1,123 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-deep:            #02091a;
+  --bg-surface:         #040e22;
+  --accent-cyan:        #00d4ff;
+  --accent-cyan-dim:    rgba(0, 212, 255, 0.12);
+  --glass-bg:           rgba(4, 14, 34, 0.65);
+  --glass-border:       rgba(0, 212, 255, 0.1);
+  --sev-critical:       #ff2d55;
+  --sev-high:           #ff6b35;
+  --sev-medium:         #ffd60a;
+  --sev-low:            #30d158;
+  --sev-safe:           #00d4ff;
+  --font-display:       var(--font-chakra, 'Chakra Petch', sans-serif);
+  --font-mono:          var(--font-jetbrains, 'JetBrains Mono', monospace);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-background: #02091a;
+  --color-foreground: #c8d8e8;
+  --font-sans:  var(--font-display);
+  --font-mono:  var(--font-mono);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg-deep);
+  color: #c8d8e8;
+  font-family: var(--font-display);
+}
+
+/* ── Keyframes ─────────────────────────────────── */
+
+@keyframes glow-critical {
+  0%, 100% { box-shadow: 0 0 18px rgba(255,45,85,.28), 0 0 45px rgba(255,45,85,.1); }
+  50%       { box-shadow: 0 0 35px rgba(255,45,85,.48), 0 0 70px rgba(255,45,85,.2); }
+}
+
+@keyframes glow-high {
+  0%, 100% { box-shadow: 0 0 14px rgba(255,107,53,.2); }
+  50%       { box-shadow: 0 0 28px rgba(255,107,53,.38); }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+@keyframes sweep {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(400%); }
+}
+
+/* ── Utility classes ───────────────────────────── */
+
+.card-critical { animation: glow-critical 2.5s ease-in-out infinite; }
+.card-high     { animation: glow-high 3.5s ease-in-out infinite; }
+
+.animate-fade-up {
+  animation: fade-up 0.45s cubic-bezier(.22,1,.36,1) forwards;
+}
+
+.font-display { font-family: var(--font-display); }
+.font-mono-lg { font-family: var(--font-mono); }
+
+/* Scanline texture (subtle, classy) */
+.scanlines::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0,0,0,.025) 3px,
+    rgba(0,0,0,.025) 4px
+  );
+  pointer-events: none;
+  z-index: 9998;
+}
+
+/* ── Print reset ───────────────────────────────── */
+
+@media print {
+  .no-print            { display: none !important; }
+  header               { display: none !important; }
+  .print-header        { display: block !important; }
+  .card-critical,
+  .card-high           { animation: none !important; }
+
+  body {
+    background: #fff !important;
+    color: #111   !important;
+    font-family: 'Helvetica Neue', Arial, sans-serif !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Reset all glass cards */
+  .glass-card {
+    background: #fff !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .line-clamp-2 {
+    -webkit-line-clamp: unset !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+
+  /* Severity badges: keep color-coded for readability */
+  .print-severity {
+    border: 1px solid currentColor !important;
+    background: transparent !important;
+  }
 }

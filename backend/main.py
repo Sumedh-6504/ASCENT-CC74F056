@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from parser import extract_text
 from detective import run_detective
 from judge import run_judge
+from simulate import run_simulation
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -32,6 +33,27 @@ class AnalyzeRequest(BaseModel):
     contract_text: str
 
 
+class SimulateRequest(BaseModel):
+    findings: list[dict]
+    contract_summary: str
+
+
+def _raise_for_agent_error(exc: Exception, agent: str) -> None:
+    """Map agent exceptions to the correct HTTP status code and a human-readable message."""
+    msg = str(exc)
+    if "429" in msg or "RESOURCE_EXHAUSTED" in msg:
+        if any(k in msg.lower() for k in ("per day", "free tier", "daily")):
+            raise HTTPException(
+                429,
+                "API daily quota exhausted. The free tier allows 1,500 requests/day. "
+                "Try again tomorrow or set GEMINI_MODEL=gemini-2.0-flash-lite in backend/.env for a lower quota model."
+            )
+        raise HTTPException(429, "API rate limit hit. Wait ~30 seconds and try again.")
+    if "API_KEY" in msg or "api key" in msg.lower() or "401" in msg:
+        raise HTTPException(401, "Invalid or missing GEMINI_API_KEY. Check backend/.env.")
+    raise HTTPException(500, f"{agent} failed: {msg[:300]}")
+
+
 @app.get("/health")
 def health():
     return {"status": "ok", "service": "LexGuard API"}
@@ -52,10 +74,7 @@ async def parse_file(file: UploadFile = File(...)):
     text = extract_text(contents, file.content_type or "", name)
 
     if len(text.strip()) < 50:
-        raise HTTPException(
-            422,
-            "Could not extract readable text. The file may be scanned or image-based.",
-        )
+        raise HTTPException(422, "Could not extract readable text. The file may be scanned or image-based.")
 
     return {"text": text}
 
@@ -68,14 +87,27 @@ async def analyze(request: AnalyzeRequest):
     try:
         detective_findings = run_detective(request.contract_text)
     except Exception as e:
-        raise HTTPException(500, f"Detective agent failed: {e}")
+        _raise_for_agent_error(e, "Detective agent")
 
     try:
-        analysis = run_judge(request.contract_text, detective_findings)
+        analysis = run_judge(request.contract_text, detective_findings)  # type: ignore[possibly-undefined]
     except Exception as e:
-        raise HTTPException(500, f"Judge agent failed: {e}")
+        _raise_for_agent_error(e, "Judge agent")
 
-    return analysis
+    return analysis  # type: ignore[possibly-undefined]
+
+
+@app.post("/simulate")
+async def simulate(request: SimulateRequest):
+    if not request.findings:
+        raise HTTPException(400, "No findings provided for simulation.")
+
+    try:
+        result = run_simulation(request.findings, request.contract_summary)
+    except Exception as e:
+        _raise_for_agent_error(e, "Simulator agent")
+
+    return result  # type: ignore[possibly-undefined]
 
 
 if __name__ == "__main__":

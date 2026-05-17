@@ -4,67 +4,96 @@ import React from "react";
 import { RiskLevel } from "../types/analysis";
 
 interface RiskScoreBadgeProps {
-  score: number; // 0-100
+  score: number;
   level: RiskLevel;
 }
 
+const LEVEL_CONFIG: Record<string, { color: string; label: string }> = {
+  SAFE:     { color: "#00d4ff", label: "SAFE"     },
+  LOW:      { color: "#30d158", label: "LOW RISK" },
+  MEDIUM:   { color: "#ffd60a", label: "MEDIUM"   },
+  HIGH:     { color: "#ff6b35", label: "HIGH RISK" },
+  CRITICAL: { color: "#ff2d55", label: "CRITICAL" },
+};
+
 export default function RiskScoreBadge({ score, level }: RiskScoreBadgeProps) {
-  const getColor = () => {
-    if (score < 20) return "text-emerald-500 stroke-emerald-500";
-    if (score < 50) return "text-blue-500 stroke-blue-500";
-    if (score < 75) return "text-amber-500 stroke-amber-500";
-    return "text-rose-500 stroke-rose-500";
-  };
-
-  const getGradient = () => {
-    if (score < 20) return "from-emerald-500 to-emerald-400";
-    if (score < 50) return "from-blue-500 to-blue-400";
-    if (score < 75) return "from-amber-500 to-amber-400";
-    return "from-rose-500 to-rose-400";
-  };
-
-  const radius = 60;
+  const cfg = LEVEL_CONFIG[level] ?? LEVEL_CONFIG.MEDIUM;
+  const radius = 58;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (score / 100) * circumference;
+  const offset = circumference - (score / 100) * circumference;
 
   return (
-    <div className="flex flex-col items-center justify-center p-6 bg-white rounded-3xl shadow-sm border border-slate-100">
-      <div className="relative w-40 h-40 flex items-center justify-center">
-        {/* Background Circle */}
-        <svg className="w-full h-full transform -rotate-90 absolute">
+    <div
+      className="flex flex-col items-center justify-center p-6 rounded-2xl print-card"
+      style={{
+        background: "rgba(4,14,34,0.7)",
+        border: `1px solid ${cfg.color}30`,
+        boxShadow: `0 0 30px ${cfg.color}18`,
+        backdropFilter: "blur(16px)",
+        minWidth: 180,
+      }}
+    >
+      <div className="relative w-36 h-36 flex items-center justify-center">
+        <svg className="w-full h-full -rotate-90 absolute inset-0" viewBox="0 0 160 160">
+          {/* Track */}
+          <circle cx="80" cy="80" r={radius} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="10" />
+          {/* Progress */}
           <circle
-            cx="80"
-            cy="80"
-            r={radius}
-            stroke="currentColor"
-            strokeWidth="12"
-            fill="transparent"
-            className="text-slate-100"
-          />
-          {/* Progress Circle */}
-          <circle
-            cx="80"
-            cy="80"
-            r={radius}
-            stroke="currentColor"
-            strokeWidth="12"
-            fill="transparent"
-            strokeDasharray={circumference}
-            strokeDashoffset={strokeDashoffset}
+            cx="80" cy="80" r={radius}
+            fill="none"
+            stroke={cfg.color}
+            strokeWidth="10"
             strokeLinecap="round"
-            className={`transition-all duration-1000 ease-out ${getColor()}`}
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            style={{
+              transition: "stroke-dashoffset 1s cubic-bezier(.22,1,.36,1)",
+              filter: `drop-shadow(0 0 8px ${cfg.color}80)`,
+            }}
           />
         </svg>
-        <div className="absolute flex flex-col items-center justify-center">
-          <span className="text-4xl font-black text-slate-800">{score}</span>
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">/ 100</span>
+
+        {/* Inner glow */}
+        <div
+          className="absolute inset-6 rounded-full"
+          style={{ background: `radial-gradient(ellipse at center, ${cfg.color}10 0%, transparent 70%)` }}
+        />
+
+        <div className="relative flex flex-col items-center">
+          <span
+            className="text-4xl font-black leading-none"
+            style={{ color: cfg.color, fontFamily: "var(--font-mono, monospace)" }}
+          >
+            {score}
+          </span>
+          <span
+            className="text-[9px] tracking-[0.2em] mt-0.5"
+            style={{ color: `${cfg.color}70`, fontFamily: "var(--font-mono, monospace)" }}
+          >
+            / 100
+          </span>
         </div>
       </div>
-      <div className="mt-4 flex flex-col items-center">
-        <span className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-1">Risk Level</span>
-        <div className={`px-4 py-1.5 rounded-full text-white font-bold text-sm bg-gradient-to-r ${getGradient()} shadow-sm`}>
-          {level}
-        </div>
+
+      <div className="mt-4 flex flex-col items-center gap-1">
+        <span
+          className="text-[9px] tracking-[0.3em] uppercase"
+          style={{ color: "#2a4060", fontFamily: "var(--font-mono, monospace)" }}
+        >
+          Risk Level
+        </span>
+        <span
+          className="px-4 py-1 rounded-full text-xs font-black tracking-widest"
+          style={{
+            color: cfg.color,
+            background: `${cfg.color}15`,
+            border: `1px solid ${cfg.color}35`,
+            boxShadow: `0 0 12px ${cfg.color}25`,
+            fontFamily: "var(--font-mono, monospace)",
+          }}
+        >
+          {cfg.label}
+        </span>
       </div>
     </div>
   );

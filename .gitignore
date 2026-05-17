@@ -40,3 +40,6 @@ service-account.json
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+PROBLEM STATEMENT 01 Promptwars.md
+backend/.log
