@@ -40,7 +40,8 @@ COPY --from=builder /app/.next/static /app/frontend/.next/static
 
 # ── Startup script ──────────────────────────────────────────────────────────
 COPY start.sh /app/start.sh
-RUN chmod +x /app/start.sh
+# Strip Windows \r\n → Unix \n (critical: #!/bin/sh\r breaks on Linux)
+RUN sed -i 's/\r$//' /app/start.sh && chmod +x /app/start.sh
 
 # Cloud Run injects $PORT; defaults to 3000
 ENV PORT=3000
