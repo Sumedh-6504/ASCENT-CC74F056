@@ -49,8 +49,12 @@ def _raise_for_agent_error(exc: Exception, agent: str) -> None:
                 "Try again tomorrow or set GEMINI_MODEL=gemini-2.0-flash-lite in backend/.env for a lower quota model."
             )
         raise HTTPException(429, "API rate limit hit. Wait ~30 seconds and try again.")
-    if "API_KEY" in msg or "api key" in msg.lower() or "401" in msg:
-        raise HTTPException(401, "Invalid or missing GEMINI_API_KEY. Check backend/.env.")
+    if "GEMINI_API_KEY is not set" in msg:
+        raise HTTPException(401, "Invalid or missing GEMINI_API_KEY. Check backend/.env or set USE_VERTEX_AI=true.")
+    if "403" in msg or "PERMISSION_DENIED" in msg:
+        raise HTTPException(403, f"Vertex AI permission denied. Ensure the Vertex AI API is enabled and the service account has 'Vertex AI User' role. Detail: {msg[:200]}")
+    if "401" in msg or "UNAUTHENTICATED" in msg:
+        raise HTTPException(401, f"Authentication failed. If using Vertex AI, check GOOGLE_CLOUD_PROJECT is correct. Detail: {msg[:200]}")
     raise HTTPException(500, f"{agent} failed: {msg[:300]}")
 
 

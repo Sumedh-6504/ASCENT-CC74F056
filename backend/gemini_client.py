@@ -50,12 +50,12 @@ def get_model() -> str:
 
 
 def call_gemini(client: genai.Client, contents: str, config: types.GenerateContentConfig,
-                max_retries: int = 1):
+                max_retries: int = 3):
     """
-    Wraps generate_content with smart retry logic.
-    - Retries once on short per-minute 429s (delay ≤ 30 s)
-    - Raises immediately on per-day quota exhaustion (delay > 30 s)
-      so main.py can return a 429 to the client instead of a 500.
+    Wraps generate_content with a robust Exponential Backoff retry strategy.
+    - Handles short per-minute 429 rate limits seamlessly.
+    - Retries up to 3 times with progressive delays (2s, 4s, 8s).
+    - If a specific 'retry in X seconds' header is given, respects that duration instead.
     """
     model = get_model()
     last_err = None
@@ -70,13 +70,26 @@ def call_gemini(client: genai.Client, contents: str, config: types.GenerateConte
         except Exception as exc:
             last_err = exc
             msg = str(exc)
+            
+            # Check if this is a 429 Rate Limit error
             if "429" in msg or "RESOURCE_EXHAUSTED" in msg:
-                match = re.search(r"retry in\s+(\d+(?:\.\d+)?)\s*s", msg, re.IGNORECASE)
-                delay = float(match.group(1)) if match else 0
-                # Only sleep-and-retry for short per-minute limits
-                if attempt < max_retries and 0 < delay <= 60:
-                    time.sleep(delay + 1)
+                # Do not retry if the error explicitly says daily quota is exhausted
+                if any(k in msg.lower() for k in ("per day", "daily quota", "daily limit")):
+                    raise exc
+                
+                if attempt < max_retries:
+                    # Look for specific "retry in X.X s" from the Google API
+                    match = re.search(r"retry in\s+(\d+(?:\.\d+)?)\s*s", msg, re.IGNORECASE)
+                    if match:
+                        delay = float(match.group(1)) + 0.5
+                    else:
+                        # Exponential backoff: 2s, 4s, 8s
+                        delay = 2 ** (attempt + 1)
+                    
+                    print(f"[Gemini Client] Rate limit hit (429). Retrying attempt {attempt + 1}/{max_retries} in {delay:.2f}s...")
+                    time.sleep(delay)
                     continue
-            raise  # re-raise immediately for everything else
+            
+            raise exc  # Re-raise immediately for all non-429 or final failures
 
-    raise last_err  # unreachable but satisfies type checkers
+    raise last_err  # Fallback
