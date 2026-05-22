@@ -154,71 +154,118 @@ export default function AnalysisDetailPage() {
         </div>
       </div>
 
-      {/* ── Main Two-Pane Split-Screen Workspace Grid ── */}
+      {/* ── Main Workspace ── */}
       <div className="max-w-7xl mx-auto px-6 mt-8">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-8 items-start">
-          
-          {/* ── LEFT PANE: Premium Contract Document Viewer (60% width) ── */}
-          <div className="md:col-span-3 bg-[#ffffff] border-3 border-[#1a1a1a] p-8 neo-shadow-lg flex flex-col space-y-6 h-[calc(100vh-14rem)] min-h-[500px]">
-            <div className="flex items-center justify-between pb-4 border-b-2 border-[#1a1a1a]/15">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 border-2 border-[#1a1a1a] bg-[#d2c4fb] neo-shadow-sm">
-                  <Scroll className="w-5 h-5 text-[#1a1a1a]" />
+        {analysis.contract_text?.trim() ? (
+          /* ── Two-Pane Split: contract text + assessment ── */
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-8 items-start">
+
+            {/* ── LEFT PANE: Contract Document Viewer (60%) ── */}
+            <div className="md:col-span-3 bg-[#ffffff] border-3 border-[#1a1a1a] p-8 neo-shadow-lg flex flex-col space-y-6 h-[calc(100vh-14rem)] min-h-[500px]">
+              <div className="flex items-center justify-between pb-4 border-b-2 border-[#1a1a1a]/15">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 border-2 border-[#1a1a1a] bg-[#d2c4fb] neo-shadow-sm">
+                    <Scroll className="w-5 h-5 text-[#1a1a1a]" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-black uppercase tracking-tight font-sans">Agreement Text</h2>
+                    <p className="text-[9px] font-black uppercase tracking-wider text-[#555555] font-mono mt-0.5">
+                      Live document audit with AI marker highlights
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-lg font-black uppercase tracking-tight font-sans">Agreement Text</h2>
-                  <p className="text-[9px] font-black uppercase tracking-wider text-[#555555] font-mono mt-0.5">
-                    Live document audit with AI marker highlights
-                  </p>
-                </div>
+
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 border-2 border-[#1a1a1a] bg-[#a7ffeb] text-[9px] font-black font-mono tracking-widest uppercase text-[#1a1a1a]">
+                  {analysis.document_type ? analysis.document_type.replace(/_/g, " ") : "CONTRACT"}
+                </span>
               </div>
-              
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 border-2 border-[#1a1a1a] bg-[#a7ffeb] text-[9px] font-black font-mono tracking-widest uppercase text-[#1a1a1a]">
-                {analysis.document_type ? analysis.document_type.replace(/_/g, " ") : "CONTRACT"}
-              </span>
+
+              <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                {renderHighlightedContract()}
+              </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-              {renderHighlightedContract()}
+            {/* ── RIGHT PANE: Assessment Deck (40%) ── */}
+            <div className="md:col-span-2 space-y-6">
+              <div className="bg-[#ffffff] border-3 border-[#1a1a1a] p-6 neo-shadow-lg flex flex-col sm:flex-row items-center gap-6">
+                <div className="flex-shrink-0">
+                  <RiskScoreBadge score={analysis.overall_risk_score} level={analysis.risk_level} />
+                </div>
+                <div className="flex-grow space-y-3 text-center sm:text-left">
+                  <p className="text-[10px] font-black tracking-widest uppercase font-mono text-[#555555]">
+                    Summary Analysis
+                  </p>
+                  <p className="text-sm font-bold leading-relaxed text-[#1a1a1a]">
+                    {analysis.contract_summary}
+                  </p>
+                  {analysis.analysis_metadata && (
+                    <p className="text-[9px] font-black tracking-widest uppercase font-mono text-[#777777]">
+                      CONFIDENCE: {Math.round(analysis.analysis_metadata.judge_confidence * 100)}%
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-[#ffffff] border-3 border-[#1a1a1a] p-6 neo-shadow-lg">
+                <SummaryStats stats={analysis.summary_stats} />
+              </div>
+
+              {analysis.findings.length > 0 && (
+                <div className="no-print">
+                  <SimulatePanel analysis={analysis} />
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="flex-1 h-0.5 bg-[#1a1a1a]" />
+                  <h3 className="text-xs font-black tracking-widest uppercase font-mono text-[#1a1a1a]">
+                    Findings Feed
+                  </h3>
+                  <div className="flex-1 h-0.5 bg-[#1a1a1a]" />
+                </div>
+                <FindingsList findings={analysis.findings} />
+              </div>
             </div>
           </div>
+        ) : (
+          /* ── Full-Width Layout: no contract text, findings use all space ── */
+          <div className="space-y-8">
 
-          {/* ── RIGHT PANE: Interactive Assessment Control Deck (40% width) ── */}
-          <div className="md:col-span-2 space-y-6">
-            
-            {/* Hero Card Score Block */}
-            <div className="bg-[#ffffff] border-3 border-[#1a1a1a] p-6 neo-shadow-lg flex flex-col sm:flex-row items-center gap-6">
-              <div className="flex-shrink-0">
-                <RiskScoreBadge score={analysis.overall_risk_score} level={analysis.risk_level} />
-              </div>
-              <div className="flex-grow space-y-3 text-center sm:text-left">
-                <p className="text-[10px] font-black tracking-widest uppercase font-mono text-[#555555]">
-                  Summary Analysis
-                </p>
-                <p className="text-sm font-bold leading-relaxed text-[#1a1a1a]">
-                  {analysis.contract_summary}
-                </p>
-                {analysis.analysis_metadata && (
-                  <p className="text-[9px] font-black tracking-widest uppercase font-mono text-[#777777]">
-                    CONFIDENCE: {Math.round(analysis.analysis_metadata.judge_confidence * 100)}%
+            {/* Top row: Score + Stats side by side */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="bg-[#ffffff] border-3 border-[#1a1a1a] p-6 neo-shadow-lg flex flex-col sm:flex-row items-center gap-6">
+                <div className="flex-shrink-0">
+                  <RiskScoreBadge score={analysis.overall_risk_score} level={analysis.risk_level} />
+                </div>
+                <div className="flex-grow space-y-3 text-center sm:text-left">
+                  <p className="text-[10px] font-black tracking-widest uppercase font-mono text-[#555555]">
+                    Summary Analysis
                   </p>
-                )}
+                  <p className="text-sm font-bold leading-relaxed text-[#1a1a1a]">
+                    {analysis.contract_summary}
+                  </p>
+                  {analysis.analysis_metadata && (
+                    <p className="text-[9px] font-black tracking-widest uppercase font-mono text-[#777777]">
+                      CONFIDENCE: {Math.round(analysis.analysis_metadata.judge_confidence * 100)}%
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-[#ffffff] border-3 border-[#1a1a1a] p-6 neo-shadow-lg">
+                <SummaryStats stats={analysis.summary_stats} />
               </div>
             </div>
 
-            {/* Metric Assessment Stats */}
-            <div className="bg-[#ffffff] border-3 border-[#1a1a1a] p-6 neo-shadow-lg">
-              <SummaryStats stats={analysis.summary_stats} />
-            </div>
-
-            {/* Worst Case Simulator */}
+            {/* Simulator full width */}
             {analysis.findings.length > 0 && (
               <div className="no-print">
                 <SimulatePanel analysis={analysis} />
               </div>
             )}
 
-            {/* Findings Accordion Deck */}
+            {/* Findings Feed full width */}
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <div className="flex-1 h-0.5 bg-[#1a1a1a]" />
@@ -229,10 +276,8 @@ export default function AnalysisDetailPage() {
               </div>
               <FindingsList findings={analysis.findings} />
             </div>
-
           </div>
-
-        </div>
+        )}
       </div>
 
     </div>
