@@ -57,7 +57,7 @@ export default function FindingsList({ findings }: FindingsListProps) {
             >
               <span>{cfg.label}</span>
               {count > 0 && (
-                <span className="px-1.5 py-0.5 border border-[#1a1a1a] bg-[#ffffff] text-[9px] font-black text-[#1a1a1a]">
+                <span className="px-1.5 py-0.5 border-2 border-[#1a1a1a] bg-[#1a1a1a] text-[9px] font-black text-[#ffffff]">
                   {count}
                 </span>
               )}
